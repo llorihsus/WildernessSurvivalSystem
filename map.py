@@ -14,8 +14,8 @@ class GameMap:
         """
         Create a map using the width and height supplied by the WSS file.
         """
-        self._check_dimension(width, "width")
-        self._check_dimension(height, "height")
+        self.check_dimension(width, "width")
+        self.check_dimension(height, "height")
 
         self.width = width
         self.height = height
@@ -26,7 +26,7 @@ class GameMap:
         ]
 
     @staticmethod
-    def _check_dimension(value, name):
+    def check_dimension(value, name):
         """Check if the map dimension is correct."""
         if isinstance(value, bool) or not isinstance(value, int):
             raise TypeError(f"{name} must be an integer")
