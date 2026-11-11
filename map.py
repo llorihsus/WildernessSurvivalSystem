@@ -20,11 +20,6 @@ class GameMap:
         self.width = width
         self.height = height
 
-        self._squares = [
-            [default_terrain for _ in range(width)]
-            for _ in range(height)
-        ]
-
     @staticmethod
     def check_dimension(value, name):
         """Check if the map dimension is correct."""
