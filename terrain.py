@@ -149,7 +149,7 @@ class Swamp(Terrain):
 
 class Mountain(Terrain):
     meltedSnow = Water("Melted Snow", 1, 1, True)
-    goldNugget = Gold("Gold Nugget", 4)
+    goldNugget = Gold("Gold Nugget", 10)
     goat = Food("Goat", 4, 6, True)
 
     def __init__(self):
@@ -192,7 +192,7 @@ class Desert(Terrain):
         if self.desertSpring in self.resources:
             print("You found an oasis in the desert with a spring that could provide you with hydration.")
         if self.goldNugget in self.resources:
-            print("You discover a nugget of gold through the sand as you shuffled your feet.")
+            print("You discover a chunks of gold through the sand as you shuffled your feet.")
         if self.cacti in self.resources:
             print("You spot cacti growing as far as you can see in the horizon.")
         self.displayResources()
