@@ -13,19 +13,19 @@ class Terrain:
         self.resources = []
 
     def hasSufficientCostToEnter(self, player: Player) -> bool:
-        if player.water < self.waterCost:
+        if player.currWater < self.waterCost:
             return False
-        if player.food < self.foodCost:
+        if player.currFood < self.foodCost:
             return False
-        if player.movementPoints < self.movementCost:
+        if player.movePts < self.movementCost:
             return False
 
         return True
 
     def hasSufficientCostToStay(self, player: Player) -> bool:
-        if player.water < self.waterCost * 1/2:
+        if player.currWater < self.waterCost * 1/2:
             return False
-        if player.food < self.foodCost * 1/2:
+        if player.currFood < self.foodCost * 1/2:
             return False
         
         return True
@@ -56,17 +56,17 @@ class Terrain:
     def terrainEntered(self, player: Player):
         print(f"You have entered the {self.name}.")
         print(f"Water Cost: {self.waterCost}, Food Cost: {self.foodCost}, Movement Cost: {self.movementCost}")
-        player.water -= self.waterCost
-        player.food -= self.foodCost    
-        player.movementPoints -= self.movementCost
+        player.currWater -= self.waterCost
+        player.currFood -= self.foodCost    
+        player.movePts -= self.movementCost
         return None
 
     def stayedInTerrain(self, player: Player):
         print(f"You have decided to stay in the {self.name} to rest before travelling further.")
         print(f"Water Cost: {self.waterCost * 1/2}, Food Cost: {self.foodCost * 1/2}, Movement Cost: +2")
-        player.water -= int(self.waterCost * 1/2)
-        player.food -= int(self.foodCost * 1/2)
-        player.movementPoints += 2
+        player.currWater -= int(self.waterCost * 1/2)
+        player.currFood -= int(self.foodCost * 1/2)
+        player.movePts += 2
         self.displayResources()
         return None
 
@@ -85,7 +85,7 @@ class Plains(Terrain):
             self.resources.append(self.rabbit)
 
     def terrainEntered(self, player: Player):
-        super().terrainEntered()
+        super().terrainEntered(player)
         print("The plains are vast and open, with a gentle breeze blowing across the fields.")
         if self.riverWater in self.resources:
             print("You hear the sound of a river nearby, and you realize that there may be some fresh water available.")
