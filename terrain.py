@@ -1,7 +1,12 @@
+"""
+    This file contains the Terrain class and its subclasses: Plains, Forest, Swamp, 
+    Mountain, and Desert. These classes represent different types of terrain that can 
+    be found in the game.
+"""
 from item import Item, Food, Gold, Water
 from trader import Trader
-import random
 from player import Player
+import random
 
 class Terrain:
     def __init__(self, name : str, waterCost : int, movementCost : int, foodCost : int):
@@ -76,7 +81,7 @@ class Plains(Terrain):
     rabbit = Food("Rabbit", 3, 4, True)
 
     def __init__(self):
-        super().__init__("Plains", 1, 1, 1)
+        super().__init__("plains", 1, 1, 1)
         if random.randint(0, 1) == 0:
             self.resources.append(self.riverWater)
         if random.randint(0, 1) == 0:
@@ -103,7 +108,7 @@ class Forest(Terrain):
     mushrooms = Food("Mushrooms", 2, 3)
     
     def __init__(self):
-        super().__init__("Forest", 1, 2, 2)
+        super().__init__("forest", 1, 2, 2)
         if random.randint(0, 1) == 0:
             self.resources.append(self.forestStream)
         if random.randint(0, 1) == 0:
@@ -128,7 +133,7 @@ class Swamp(Terrain):
     cranberries = Food("Cranberries", 1, 4)
 
     def __init__(self):
-        super().__init__("Swamp", 1, 3, 3)
+        super().__init__("swamp", 1, 3, 3)
         if random.randint(0, 1) == 0:
             self.resources.append(self.swampWater)
         if random.randint(0, 1) == 0:
@@ -153,7 +158,7 @@ class Mountain(Terrain):
     goat = Food("Goat", 4, 6, True)
 
     def __init__(self):
-        super().__init__("Mountain", 3, 4, 3)
+        super().__init__("mountain", 3, 4, 3)
         if random.randint(0, 1) == 0:
             self.resources.append(self.meltedSnow)
         if random.randint(0, 1) == 0:
@@ -178,7 +183,7 @@ class Desert(Terrain):
     cacti = Food("Cacti", 2, 3, True)
 
     def __init__(self):
-        super().__init__("Desert", 3, 2, 2)
+        super().__init__("desert", 3, 2, 2)
         if random.randint(0, 1) == 0:
             self.resources.append(self.desertSpring)
         if random.randint(0, 1) == 0:
