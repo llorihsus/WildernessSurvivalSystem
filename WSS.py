@@ -16,7 +16,6 @@ TERRAIN_EMOJIS = {
     "forest": "🌲",
 }
 
-
 def get_dimension(name):
     """Ask the user for a positive map dimension."""
     while True:
@@ -30,7 +29,6 @@ def get_dimension(name):
 
         except ValueError:
             print(f"Please enter a whole number for the map {name}.")
-
 
 def get_difficulty():
     """Ask the user to select a map difficulty."""
@@ -51,14 +49,12 @@ def main():
 
     width = get_dimension("width")
     height = get_dimension("height")
-
     difficulty = get_difficulty()
 
     game_map = GameMap(width, height, difficulty)
 
     print(f"\nGenerated {difficulty} map:")
     game_map.display(TERRAIN_EMOJIS)
-
 
 if __name__ == "__main__":
     main()

@@ -23,9 +23,10 @@ class GameMap:
         self.height = height
         self.difficulty = difficulty
 
-        self._squares = self.populate(width, height, difficulty)
+        self._squares = GameMap.populate(width, height, difficulty)
 
-    def populate(self, width, height, difficulty):
+    @staticmethod
+    def populate(width, height, difficulty):
         """
         Build and return a height x width grid of randomly chosen terrain.
 
@@ -35,7 +36,7 @@ class GameMap:
         """
         squares = [[None for _ in range(width)] for _ in range(height)]
 
-        plain_cutoff, forest_cutoff = self.TERRAIN_WEIGHTS[difficulty]
+        plain_cutoff, forest_cutoff = GameMap.TERRAIN_WEIGHTS[difficulty]
         for row in range(height):
             for column in range(width):
                 random_value = random.random()
