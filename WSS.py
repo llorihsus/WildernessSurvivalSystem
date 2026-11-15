@@ -32,6 +32,18 @@ def get_dimension(name):
             print(f"Please enter a whole number for the map {name}.")
 
 
+def get_difficulty():
+    """Ask the user to select a map difficulty."""
+    while True:
+        difficulty = input(
+            "Enter map difficulty (easy, medium, or hard): "
+        ).lower()
+
+        if difficulty in {"easy", "medium", "hard"}:
+            return difficulty
+
+        print("Please enter easy, medium, or hard.")
+
 
 def main():
     """Run the Wilderness Survival System."""
@@ -41,6 +53,13 @@ def main():
     height = get_dimension("height")
 
     game_map = GameMap(width, height)
+
+    difficulty = get_difficulty()
+
+    game_map.populate(difficulty)
+
+    print(f"\nGenerated {difficulty} map:")
+    game_map.display(TERRAIN_EMOJIS)
 
 
 if __name__ == "__main__":
