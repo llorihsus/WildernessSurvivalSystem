@@ -52,11 +52,9 @@ def main():
     width = get_dimension("width")
     height = get_dimension("height")
 
-    game_map = GameMap(width, height)
-
     difficulty = get_difficulty()
 
-    game_map.populate(difficulty)
+    game_map = GameMap(width, height, difficulty)
 
     print(f"\nGenerated {difficulty} map:")
     game_map.display(TERRAIN_EMOJIS)
