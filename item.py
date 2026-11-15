@@ -1,3 +1,7 @@
+"""
+    This file contains the Item class and its subclasses: Food, Gold, and Water. 
+    These classes represent different types of items that can be found in the game.
+"""
 class Item:
     def __init__(self, name: str, bonus: int, repeatBonus: bool = False):
         self.name = name
