@@ -1,108 +1,57 @@
+from terrain import Mountain, Desert, Swamp, Forest, Plains
+import random
+
 class GameMap:
     """Represents a rectangular map made of terrain squares."""
 
-    VALID_TERRAINS = {
-        "plains",
-        "mountain",
-        "desert",
-        "swamp",
-        "forest",
+    # (plains cutoff, forest cutoff) for each difficulty.
+    # A random value below the plains cutoff makes Plains, below the forest
+    # cutoff makes Forest, and anything else makes Swamp, Desert, or Mountain.
+    TERRAIN_WEIGHTS = {
+        "easy": (0.6, 0.85),    # 60% Plains, 25% Forest, 15% Swamp/Desert/Mountain
+        "medium": (0.35, 0.6),  # 35% Plains, 25% Forest, 40% Swamp/Desert/Mountain
+        "hard": (0.15, 0.35),   # 15% Plains, 20% Forest, 65% Swamp/Desert/Mountain
     }
 
-    def __init__(self, width, height, default_terrain="plains"):
+    def __init__(self, width, height, difficulty):
         """
-        Create a map using the width and height supplied by the WSS file.
+        Create a map of the given width and height, filled with random
+        terrain weighted by the selected difficulty.
         """
-        self.check_dimension(width, "width")
-        self.check_dimension(height, "height")
 
         self.width = width
         self.height = height
+        self.difficulty = difficulty
 
-        self._validate_terrain(default_terrain)
-
-        self._squares = [
-            [default_terrain for _ in range(width)]
-            for _ in range(height)
-        ]
+        self._squares = GameMap.populate(width, height, difficulty)
 
     @staticmethod
-    def check_dimension(value, name):
-        """Check if the map dimension is correct."""
-        if isinstance(value, bool) or not isinstance(value, int):
-            raise TypeError(f"{name} must be an integer")
-
-        if value <= 0:
-            raise ValueError(f"{name} must be greater than zero")
-
-    @staticmethod
-    def _validate_terrain(terrain):
-        """Check if a terrain type is valid."""
-        if terrain not in GameMap.VALID_TERRAINS:
-            raise ValueError(f"Invalid terrain type: {terrain}")
-
-    def populate(self, difficulty):
+    def populate(width, height, difficulty):
         """
-        Populate the map based on the selected difficulty.
+        Build and return a height x width grid of randomly chosen terrain.
 
-        Easy:
-            Mostly plains with some forest.
-
-        Medium:
-            Uses plains, forest, desert, and mountain.
-
-        Hard:
-            Uses all available terrain types.
+        Each square is picked using the TERRAIN_WEIGHTS for the difficulty.
+        Harder difficulties have fewer Plains and Forest squares and more
+        Swamp, Desert, and Mountain squares.
         """
-        valid_difficulties = {"easy", "medium", "hard"}
+        squares = [[None for _ in range(width)] for _ in range(height)]
 
-        if difficulty not in valid_difficulties:
-            raise ValueError(
-                "Difficulty must be easy, medium, or hard"
-            )
-
-        for row in range(self.height):
-            for column in range(self.width):
-
-                if difficulty == "easy":
-                    # Easy maps contain mostly plains.
-                    if (row + column) % 7 == 0:
-                        terrain = "forest"
-                    else:
-                        terrain = "plains"
-
-                elif difficulty == "medium":
-                    # Medium maps use four different terrain types.
-                    terrain_pattern = [
-                        "plains",
-                        "forest",
-                        "desert",
-                        "mountain",
-                    ]
-
-                    terrain = terrain_pattern[
-                        (row + column) % len(terrain_pattern)
-                    ]
-
+        plain_cutoff, forest_cutoff = GameMap.TERRAIN_WEIGHTS[difficulty]
+        for row in range(height):
+            for column in range(width):
+                random_value = random.random()
+                if random_value < plain_cutoff:
+                    terrain = Plains()
+                elif random_value < forest_cutoff:
+                    terrain = Forest()
                 else:
-                    # Hard maps use every available terrain type.
-                    terrain_pattern = [
-                        "plains",
-                        "mountain",
-                        "desert",
-                        "swamp",
-                        "forest",
-                        "water",
-                    ]
+                    terrain = random.choice([Swamp, Desert, Mountain])()
+                
+                squares[row][column] = terrain
 
-                    terrain = terrain_pattern[
-                        (row * self.width + column)
-                        % len(terrain_pattern)
-                    ]
-
-                self._squares[row][column] = terrain
+        return squares
 
     def display(self, terrain_emojis):
         """Display the map using terrain emojis."""
         for row in self._squares:
-            print(" ".join(terrain_emojis[terrain] for terrain in row))
+            print(" ".join(terrain_emojis[terrain.name] for terrain in row))
