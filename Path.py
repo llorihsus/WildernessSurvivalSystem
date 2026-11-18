@@ -18,12 +18,13 @@ class Path:
         self.moveWest = west
         
         self.movementPath = self.movementPath.extend([north, south, east, west])
+        self.totalMoveCost = north + south + east + west
     
-    def getMovementCost() -> int:
-        return 0
+    def getMovementCost(self) -> int:
+        return self.totalMoveCost
     
-    def getWaterCost() -> int:
-        return 0
+    def getWaterCost(self) -> int:
+        return self.totalWaterCost
     
-    def getFoodCost() -> int:
-        return 0
+    def getFoodCost(self) -> int:
+        return self.totalFoodCost

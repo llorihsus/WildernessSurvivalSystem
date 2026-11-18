@@ -1,8 +1,8 @@
-import Vision
-import Path
+import vision
+import path
 
 class Brain:
-    def getPath(vision) -> Path:
+    def getPath(vision) -> path:
         return 
     
     def makeMove(path) -> bool:
