@@ -55,8 +55,8 @@ class Vision:
         # Start fresh so squares from an earlier position don't pile up
         self.vision = []
         for y in range(top, bottom + 1):
-            row = [self.vision_map.get_terrain(x, y) for x in range(curr_x, right + 1)]
-            self.vision.append(row)
+            col = [self.vision_map.get_terrain(x, y) for x in range(curr_x, right + 1)]
+            self.vision.append(col)
 
         return self.vision
 
