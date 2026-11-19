@@ -28,10 +28,16 @@ class Terrain:
             food_cost: Food the player spends to enter this terrain.
         """
         self._name = name
+
         self._water_cost = water_cost
         self._movement_cost = movement_cost
         self._food_cost = food_cost
-        self._trader = Trader()
+
+        if (random.randint(0,1) == 0 ): # 50% chance of trader appearing on the terrain
+            self._trader = Trader()
+        else:
+            self._trader = None
+
         self._resources = []  # Filled in by each subclass
 
     @property
