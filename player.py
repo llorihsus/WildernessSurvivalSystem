@@ -66,17 +66,35 @@ class Player:
     def inventory(self):
         return list(self.__inventory)  # copy so callers can't edit it directly
 
+    # setters for private attributes that can change with values checked against min and max
+    @curr_strength.setter
+    def curr_strength(self, value: int):
+        self.__curr_strength = max(0, min(value, self.__max_strength))
+
+    @curr_water.setter
+    def curr_water(self, value: int):
+        self.__curr_water = max(0, min(value, self.__max_water))
+
+    @curr_food.setter
+    def curr_food(self, value: int):
+        self.__curr_food = max(0, min(value, self.__max_food))
+
+    @curr_gold.setter
+    def curr_gold(self, value: int):
+        self.__curr_gold = max(0, value)
+
+    # change methods
     def change_curr_strength(self, amount : int):
-        self.__curr_strength += amount
+        self.curr_strength += amount
 
     def change_curr_water(self, amount : int):
-        self.__curr_water += amount
+        self.curr_water += amount
 
     def change_curr_food(self, amount : int):
-        self.__curr_food += amount
+        self.curr_food += amount
 
     def change_curr_gold(self, amount : int):
-        self.__curr_gold += amount
+        self.curr_gold += amount
 
     def change_move_pts(self, amount : int):
         self.__move_pts += amount
