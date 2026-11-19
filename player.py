@@ -24,6 +24,19 @@ class Player:
         self.curr_x = 0
         self.curr_y = 0
 
+    # Read only access to max attributes
+    @property
+    def max_strength(self):
+        return self.__max_strength
+
+    @property
+    def max_water(self):
+        return self.__max_water
+
+    @property
+    def max_food(self):
+        return self.__max_food
+
     # Read only access to private attributes
     @property
     def curr_strength(self):
