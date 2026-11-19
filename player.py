@@ -59,6 +59,10 @@ class Player:
         return self.__move_pts
 
     @property
+    def brain(self):
+        return self.__brain
+
+    @property
     def vision_scope(self):
         return self.__vision_scope
 
@@ -101,12 +105,18 @@ class Player:
 
     # spawn method - places player on west edge of the map
     def spawn_player(self, start_y: int):
-        self.curr_x = 0
-        self.curr_y = start_y
+        self.update_position(0, start_y)
         self.__curr_strength = self.__max_strength
         self.__curr_water = self.__max_water
         self.__curr_food = self.__max_food
         self.__curr_gold = 0
+
+    # changes player's position to new x, y and updates their vision scope
+    def update_position(self, x: int, y: int):
+        self.curr_x = x
+        self.curr_y = y
+        if self.__vision_scope is not None:
+            self.__vision_scope.update_position(x, y)
 
     # class methods
 
