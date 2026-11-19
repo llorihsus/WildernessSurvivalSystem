@@ -1,281 +1,306 @@
-import path
-import map
-import player
-import terrain
-import item
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+from path import Path
+from item import Food, Water, Gold
+from trader import Trader
+
+# Only used in type hints, so they are skipped at runtime to avoid a circular import
+if TYPE_CHECKING:
+    from map import GameMap
+    from player import Player
+    from terrain import Terrain
 
 class Vision:
-    neighboringSquares: tuple[int, int, int]                # number of squares visible to the [north, south, east]
-    visionPath: path.Path                                   # a certain path from visible vision per brain's request (closestFood, closestWater, etc.)
-    playerPos: tuple[int, int]                              # current position of player (x, y)
-    visionMap: map.GameMap                                  # map stored for vision
-    vision: list[list[terrain.Terrain]]                     # 2D array representation of current vision w/ visible terrain
-    hasItems: list[tuple[tuple[int, int], int]]             # [hasItem square's x,y coords, distance]
+    neighboring_squares: tuple[int, int, int]               # number of squares visible to the [north, south, east]
+    vision_path: Path                                       # a certain path from visible vision per brain's request (closest_food, closest_water, etc.)
+    player_pos: tuple[int, int]                             # current position of player (x, y)
+    vision_map: GameMap                                     # map stored for vision
+    vision: list[list[Terrain]]                             # 2D array representation of current vision w/ visible terrain
+    has_items: list[tuple[tuple[int, int], int]]            # [has_item square's x,y coords, distance]
 
-    def __init__(self, neighboringSquares: tuple[int, int, int], map: map.GameMap, player: player.Player):
-        self.neighboringSquares = neighboringSquares        # [north, south, east]
-        self.playerPos = (player.currX, player.currY)
-        self.visionMap = map
+    def __init__(self, neighboring_squares: tuple[int, int, int], game_map: GameMap, player: Player):
+        self.neighboring_squares = neighboring_squares      # [north, south, east]
+        self.player_pos = (player.curr_x, player.curr_y)
+        self.vision_map = game_map
         self.vision = []
-        self.hasItems = []
-        self.visionPath = path.Path(0, 0, 0, 0)
-        
-        self.updateVision(self.playerPos[0], self.playerPos[1])
-                
-        
-    def updateVision(self, currX: int, currY: int) -> list[list[terrain.Terrain]]:
-        rangeNorth, rangeSouth, rangeEast = self.neighboringSquares
-        
-        for row in self.visionMap[currX - rangeNorth : currX + rangeSouth + 1]:
-            selectCols = list(row[currY : currY + rangeEast + 1])
-            self.vision.append(selectCols)
-        
+        self.has_items = []
+        self.vision_path = Path(0, 0, 0, 0)
+
+        self.update_vision(self.player_pos[0], self.player_pos[1])
+
+
+    def update_vision(self, curr_x: int, curr_y: int) -> list[list[Terrain]]:
+        """
+        Rebuild the grid of terrain the player can currently see.
+
+        The player sees range_north rows above them, range_south rows below
+        them, and range_east columns to their right. Squares past the edge
+        of the map are left out.
+
+        Args:
+            curr_x: The player's column on the map.
+            curr_y: The player's row on the map.
+
+        Returns:
+            The visible terrain as a list of rows, top row first.
+        """
+        range_north, range_south, range_east = self.neighboring_squares
+
+        # Keep the visible area inside the edges of the map
+        top = max(curr_y - range_north, 0)
+        bottom = min(curr_y + range_south, self.vision_map.height - 1)
+        right = min(curr_x + range_east, self.vision_map.width - 1)
+
+        # Start fresh so squares from an earlier position don't pile up
+        self.vision = []
+        for y in range(top, bottom + 1):
+            row = [self.vision_map.get_terrain(x, y) for x in range(curr_x, right + 1)]
+            self.vision.append(row)
+
         return self.vision
-        
-    def closestFood(self) -> path.Path:
-        hasFood = []
-        for rowIndex, row in enumerate(self.vision):
-            for colIndex, terrain in enumerate(row):
-                terrainItem = terrain.getItem()
-                
-                if isinstance(terrainItem, item.Food):
-                    foodDistance = abs(self.playerPos[0] - rowIndex) + abs(self.playerPos[1] - colIndex)
-                    hasFood.append(((rowIndex, colIndex), foodDistance))
-        
-        self.hasItems = hasFood
-        
-        if not hasFood:
+
+    def closest_food(self) -> Path:
+        has_food = []
+        for row_index, row in enumerate(self.vision):
+            for col_index, terrain in enumerate(row):
+                terrain_item = terrain.getItem()
+
+                if isinstance(terrain_item, Food):
+                    food_distance = abs(self.player_pos[0] - row_index) + abs(self.player_pos[1] - col_index)
+                    has_food.append(((row_index, col_index), food_distance))
+
+        self.has_items = has_food
+
+        if not has_food:
             print("No food seen in the vicinity.")
-            return self.visionPath
-        
-        closestFood = min(hasFood, key=lambda x: x[1])
-        
-        foodX, foodY = closestFood[0]
-        playerX, playerY = self.playerPos
-        
-        self.visionPath = path.Path(
+            return self.vision_path
+
+        closest = min(has_food, key=lambda x: x[1])
+
+        food_x, food_y = closest[0]
+        player_x, player_y = self.player_pos
+
+        self.vision_path = Path(
             # max prevents movement direction from going negative
-            max(playerX - foodX, 0),            # move north (player position - row index of closestFood)
-            max(foodX - playerX, 0),            # move south (row index of closestFood - player position)
-            max(foodY - playerY, 0),            # move east (col index of closestFood - player position)
-            max(playerY - foodY, 0)             # move west (player positon - col index of closestFood)
+            max(player_x - food_x, 0),          # move north (player position - row index of closest food)
+            max(food_x - player_x, 0),          # move south (row index of closest food - player position)
+            max(food_y - player_y, 0),          # move east (col index of closest food - player position)
+            max(player_y - food_y, 0)           # move west (player positon - col index of closest food)
         )
-              
-        return self.visionPath
-    
-    def secondClosestFood(self) -> path.Path:
-        self.closestFood()                              # updates hasItems
-        
-        hasFood = self.hasItems.copy()
-        
-        if len(hasFood) < 2:
+
+        return self.vision_path
+
+    def second_closest_food(self) -> Path:
+        self.closest_food()                             # updates has_items
+
+        has_food = self.has_items.copy()
+
+        if len(has_food) < 2:
             print("Food is only seen once (or not seen) in the vicinity")
-            return self.visionPath
-        
-        closest = min(hasFood, key=lambda x: x[1])
-        hasFood.remove(closest)
-        secondClosest = min(hasFood, key=lambda x: x[1])
-        
-        foodX, foodY = secondClosest[0]
-        playerX, playerY = self.playerPos
-        
-        self.visionPath = path.Path(
-            max(playerX - foodX, 0),
-            max(foodX - playerX, 0),   
-            max(foodY - playerY, 0),    
-            max(playerY - foodY, 0)
+            return self.vision_path
+
+        closest = min(has_food, key=lambda x: x[1])
+        has_food.remove(closest)
+        second_closest = min(has_food, key=lambda x: x[1])
+
+        food_x, food_y = second_closest[0]
+        player_x, player_y = self.player_pos
+
+        self.vision_path = Path(
+            max(player_x - food_x, 0),
+            max(food_x - player_x, 0),
+            max(food_y - player_y, 0),
+            max(player_y - food_y, 0)
         )
-        
-        return self.visionPath
-        
-    def closestWater(self) -> path.Path:
-        hasWater = []
-        
-        for rowIndex, row in enumerate(self.vision):
-            for colIndex, terrain in enumerate(row):
-                terrainItem = terrain.getItem()
-                
-                if isinstance(terrainItem, item.Water):
-                    waterDistance = abs(self.playerPos[0] - rowIndex) + abs(self.playerPos[1] - colIndex)
-                    hasWater.append(((rowIndex, colIndex), waterDistance))
-        
-        self.hasItems = hasWater
-        
-        if not hasWater:
+
+        return self.vision_path
+
+    def closest_water(self) -> Path:
+        has_water = []
+
+        for row_index, row in enumerate(self.vision):
+            for col_index, terrain in enumerate(row):
+                terrain_item = terrain.getItem()
+
+                if isinstance(terrain_item, Water):
+                    water_distance = abs(self.player_pos[0] - row_index) + abs(self.player_pos[1] - col_index)
+                    has_water.append(((row_index, col_index), water_distance))
+
+        self.has_items = has_water
+
+        if not has_water:
             print("No water seen in the vicinity.")
-            return self.visionPath
-        
-        closestWater = min(hasWater, key=lambda x: x[1])
-        
-        waterX, waterY = closestWater[0]
-        playerX, playerY = self.playerPos
-        
-        self.visionPath = path.Path(
+            return self.vision_path
+
+        closest = min(has_water, key=lambda x: x[1])
+
+        water_x, water_y = closest[0]
+        player_x, player_y = self.player_pos
+
+        self.vision_path = Path(
             # max prevents movement direction from going negative
-            max(playerX - waterX, 0),            # move north (player position - row index of closestWater)
-            max(waterX - playerX, 0),            # move south (row index of closestWater - player position)
-            max(waterY - playerY, 0),            # move east (col index of closestWater - player position)
-            max(playerY - waterY, 0)             # move west (player positon - col index of closestWater)
+            max(player_x - water_x, 0),         # move north (player position - row index of closest water)
+            max(water_x - player_x, 0),         # move south (row index of closest water - player position)
+            max(water_y - player_y, 0),         # move east (col index of closest water - player position)
+            max(player_y - water_y, 0)          # move west (player positon - col index of closest water)
         )
-                
-        return self.visionPath
-    
-    def secondClosestWater(self) -> path.Path:
-        self.closestWater()                              # updates hasItems
-        
-        hasWater = self.hasItems.copy()
-        
-        if len(hasWater) < 2:
+
+        return self.vision_path
+
+    def second_closest_water(self) -> Path:
+        self.closest_water()                            # updates has_items
+
+        has_water = self.has_items.copy()
+
+        if len(has_water) < 2:
             print("Water is only seen once (or not seen) in the vicinity")
-            return self.visionPath
-        
-        closest = min(hasWater, key=lambda x: x[1])
-        hasWater.remove(closest)
-        secondClosest = min(hasWater, key=lambda x: x[1])
-        
-        waterX, waterY = secondClosest[0]
-        playerX, playerY = self.playerPos
-        
-        self.visionPath = path.Path(
-            max(playerX - waterX, 0),
-            max(waterX - playerX, 0),   
-            max(waterY - playerY, 0),    
-            max(playerY - waterY, 0)
+            return self.vision_path
+
+        closest = min(has_water, key=lambda x: x[1])
+        has_water.remove(closest)
+        second_closest = min(has_water, key=lambda x: x[1])
+
+        water_x, water_y = second_closest[0]
+        player_x, player_y = self.player_pos
+
+        self.vision_path = Path(
+            max(player_x - water_x, 0),
+            max(water_x - player_x, 0),
+            max(water_y - player_y, 0),
+            max(player_y - water_y, 0)
         )
-        return self.visionPath
-    
-    def closestGold(self) -> path.Path:
-        hasGold = []
-        
-        for rowIndex, row in enumerate(self.vision):
-            for colIndex, terrain in enumerate(row):
-                terrainItem = terrain.getItem()
-                
-                if isinstance(terrainItem, item.Gold):
-                    goldDistance = abs(self.playerPos[0] - rowIndex) + abs(self.playerPos[1] - colIndex)
-                    hasGold.append(((rowIndex, colIndex), goldDistance))
-        
-        self.hasItems = hasGold
-        
-        if not hasGold:
+        return self.vision_path
+
+    def closest_gold(self) -> Path:
+        has_gold = []
+
+        for row_index, row in enumerate(self.vision):
+            for col_index, terrain in enumerate(row):
+                terrain_item = terrain.getItem()
+
+                if isinstance(terrain_item, Gold):
+                    gold_distance = abs(self.player_pos[0] - row_index) + abs(self.player_pos[1] - col_index)
+                    has_gold.append(((row_index, col_index), gold_distance))
+
+        self.has_items = has_gold
+
+        if not has_gold:
             print("No gold seen in the vicinity.")
-            return self.visionPath
-        
-        closestGold = min(hasGold, key=lambda x: x[1])
-        
-        goldX, goldY = closestGold[0]
-        playerX, playerY = self.playerPos
-        
-        self.visionPath = path.Path(
+            return self.vision_path
+
+        closest = min(has_gold, key=lambda x: x[1])
+
+        gold_x, gold_y = closest[0]
+        player_x, player_y = self.player_pos
+
+        self.vision_path = Path(
             # max prevents movement direction from going negative
-            max(playerX - goldX, 0),            # move north (player position - row index of closestGold)
-            max(goldX - playerX, 0),            # move south (row index of closestGold - player position)
-            max(goldY - playerY, 0),            # move east (col index of closestGold - player position)
-            max(playerY - goldY, 0)             # move west (player positon - col index of closestGold)
+            max(player_x - gold_x, 0),          # move north (player position - row index of closest gold)
+            max(gold_x - player_x, 0),          # move south (row index of closest gold - player position)
+            max(gold_y - player_y, 0),          # move east (col index of closest gold - player position)
+            max(player_y - gold_y, 0)           # move west (player positon - col index of closest gold)
         )
-                
-        return self.visionPath
-    
-    def secondClosestGold(self) -> path.Path:
-        self.closestGold()                              # updates hasItems
-        
-        hasGold = self.hasItems.copy()
-        
-        if len(hasGold) < 2:
+
+        return self.vision_path
+
+    def second_closest_gold(self) -> Path:
+        self.closest_gold()                             # updates has_items
+
+        has_gold = self.has_items.copy()
+
+        if len(has_gold) < 2:
             print("Gold is only seen once (or not seen) in the vicinity")
-            return self.visionPath
-        
-        closest = min(hasGold, key=lambda x: x[1])
-        hasGold.remove(closest)
-        secondClosest = min(hasGold, key=lambda x: x[1])
-        
-        goldX, goldY = secondClosest[0]
-        playerX, playerY = self.playerPos
-        
-        self.visionPath = path.Path(
-            max(playerX - goldX, 0),
-            max(goldX - playerX, 0),   
-            max(goldY - playerY, 0),    
-            max(playerY - goldY, 0)
+            return self.vision_path
+
+        closest = min(has_gold, key=lambda x: x[1])
+        has_gold.remove(closest)
+        second_closest = min(has_gold, key=lambda x: x[1])
+
+        gold_x, gold_y = second_closest[0]
+        player_x, player_y = self.player_pos
+
+        self.vision_path = Path(
+            max(player_x - gold_x, 0),
+            max(gold_x - player_x, 0),
+            max(gold_y - player_y, 0),
+            max(player_y - gold_y, 0)
         )
-        return self.visionPath
-        
-    def closestTrader(self) -> path.Path:
-        hasTrader = []
-        
-        for rowIndex, row in enumerate(self.vision):
-            for colIndex, terrain in enumerate(row):
-                terrainItem = terrain.getItem()
-                
-                if isinstance(terrainItem, item.Trader):
-                    traderDistance = abs(self.playerPos[0] - rowIndex) + abs(self.playerPos[1] - colIndex)
-                    hasTrader.append(((rowIndex, colIndex), traderDistance))
-        
-        self.hasItems = hasTrader
-        
-        if not hasTrader:
+        return self.vision_path
+
+    def closest_trader(self) -> Path:
+        has_trader = []
+
+        for row_index, row in enumerate(self.vision):
+            for col_index, terrain in enumerate(row):
+                terrain_item = terrain.getItem()
+
+                if isinstance(terrain_item, Trader):
+                    trader_distance = abs(self.player_pos[0] - row_index) + abs(self.player_pos[1] - col_index)
+                    has_trader.append(((row_index, col_index), trader_distance))
+
+        self.has_items = has_trader
+
+        if not has_trader:
             print("No trader seen in the vicinity.")
-            return self.visionPath
-        
-        closestTrader = min(hasTrader, key=lambda x: x[1])
-        
-        traderX, traderY = closestTrader[0]
-        playerX, playerY = self.playerPos
-        
-        self.visionPath = path.Path(
+            return self.vision_path
+
+        closest = min(has_trader, key=lambda x: x[1])
+
+        trader_x, trader_y = closest[0]
+        player_x, player_y = self.player_pos
+
+        self.vision_path = Path(
             # max prevents movement direction from going negative
-            max(playerX - traderX, 0),            # move north (player position - row index of closestTrader)
-            max(traderX - playerX, 0),            # move south (row index of closestTrader - player position)
-            max(traderY - playerY, 0),            # move east (col index of closestTrader - player position)
-            max(playerY - traderY, 0)             # move west (player positon - col index of closestTrader)
+            max(player_x - trader_x, 0),        # move north (player position - row index of closest trader)
+            max(trader_x - player_x, 0),        # move south (row index of closest trader - player position)
+            max(trader_y - player_y, 0),        # move east (col index of closest trader - player position)
+            max(player_y - trader_y, 0)         # move west (player positon - col index of closest trader)
         )
-                
-        return self.visionPath
-    
-    def secondClosestTrader(self) -> path.Path:
-        self.closestTrader()                              # updates hasItems
-        
-        hasTrader = self.hasItems.copy()
-        
-        if len(hasTrader) < 2:
+
+        return self.vision_path
+
+    def second_closest_trader(self) -> Path:
+        self.closest_trader()                           # updates has_items
+
+        has_trader = self.has_items.copy()
+
+        if len(has_trader) < 2:
             print("Trader is only seen once (or not seen) in the vicinity")
-            return self.visionPath
-        
-        closest = min(hasTrader, key=lambda x: x[1])
-        hasTrader.remove(closest)
-        secondClosest = min(hasTrader, key=lambda x: x[1])
-        
-        traderX, traderY = secondClosest[0]
-        playerX, playerY = self.playerPos
-        
-        self.visionPath = path.Path(
-            max(playerX - traderX, 0),
-            max(traderX - playerX, 0),   
-            max(traderY - playerY, 0),    
-            max(playerY - traderY, 0)
+            return self.vision_path
+
+        closest = min(has_trader, key=lambda x: x[1])
+        has_trader.remove(closest)
+        second_closest = min(has_trader, key=lambda x: x[1])
+
+        trader_x, trader_y = second_closest[0]
+        player_x, player_y = self.player_pos
+
+        self.vision_path = Path(
+            max(player_x - trader_x, 0),
+            max(trader_x - player_x, 0),
+            max(trader_y - player_y, 0),
+            max(player_y - trader_y, 0)
         )
-        return self.visionPath
-    
-    def easiestPath(self) -> path.Path:
-        leastMoveCost = 10000                   # arbitary initial number to get least cost
-        leastCostSquare = ()
-        
-        for rowIndex, row in enumerate(self.vision):
-                for colIndex, terrain in enumerate(row):
-                    terrainMoveCost = terrain.movementCost
-                    if terrainMoveCost < leastMoveCost:
-                        leastCostSquare = (rowIndex, colIndex)
-        
-        leastX, leastY = leastCostSquare
-        playerX, playerY = self.playerPos
-        
-        self.visionPath = path.Path(
-                    max(playerX - leastX, 0),
-                    max(leastX - playerX, 0),   
-                    max(leastY - playerY, 0),    
-                    max(playerY - leastY, 0)
+        return self.vision_path
+
+    def easiest_path(self) -> Path:
+        least_move_cost = 10000                 # arbitary initial number to get least cost
+        least_cost_square = ()
+
+        for row_index, row in enumerate(self.vision):
+                for col_index, terrain in enumerate(row):
+                    terrain_move_cost = terrain.movement_cost
+                    if terrain_move_cost < least_move_cost:
+                        least_cost_square = (row_index, col_index)
+
+        least_x, least_y = least_cost_square
+        player_x, player_y = self.player_pos
+
+        self.vision_path = Path(
+                    max(player_x - least_x, 0),
+                    max(least_x - player_x, 0),
+                    max(least_y - player_y, 0),
+                    max(player_y - least_y, 0)
                 )
-        return self.visionPath
-    
-    
-    
+        return self.vision_path
