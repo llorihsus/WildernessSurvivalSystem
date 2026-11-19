@@ -99,6 +99,15 @@ class Player:
     def change_move_pts(self, amount : int):
         self.__move_pts += amount
 
+    # spawn method - places player on west edge of the map
+    def spawn_player(self, start_y: int):
+        self.curr_x = 0
+        self.curr_y = start_y
+        self.__curr_strength = self.__max_strength
+        self.__curr_water = self.__max_water
+        self.__curr_food = self.__max_food
+        self.__curr_gold = 0
+
     # class methods
 
     def collect_item(self, item: Item):
