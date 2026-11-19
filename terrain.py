@@ -12,14 +12,15 @@ class Terrain:
     Base class for a single tile of terrain on the game map.
 
     Each terrain stores how much water, food, and movement it costs to enter,
-    holds a list of collectible resources, and has its own trader. The
-    GameMap uses these costs to charge the player; the terrain itself only
-    stores them and prints descriptions.
+    holds a list of collectible resources, and has a 50% chance of having a
+    trader. The GameMap uses these costs to charge the player; the terrain
+    itself only stores them and prints descriptions.
     """
 
     def __init__(self, name : str, water_cost : int, movement_cost : int, food_cost : int):
         """
-        Create a new terrain tile with no resources.
+        Create a new terrain tile with no resources. The tile gets a trader
+        half the time; otherwise its trader is None.
 
         Args:
             name: The terrain's name, such as "plains".
@@ -61,8 +62,8 @@ class Terrain:
         return self._food_cost
 
     @property
-    def trader(self) -> Trader:
-        """The trader located in this terrain."""
+    def trader(self) -> Trader | None:
+        """The trader located in this terrain, or None if there isn't one."""
         return self._trader
 
     @property
