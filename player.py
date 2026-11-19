@@ -1,5 +1,6 @@
-from Brain import Brain
-from Vision import Vision
+from brain import Brain
+from vision import Vision
+from item import Item, Food, Water, Gold
 
 class Player:
     def __init__(self, max_strength: int, max_water: int, max_food: int, brain: Brain, vision_scope: Vision):
@@ -18,17 +19,10 @@ class Player:
         self.__brain = brain
         self.__vision_scope = vision_scope
 
-        self.__inventory = []
+        self.__inventory: list[Item] = []
 
         self.curr_x = 0
         self.curr_y = 0
-
-    # player setup
-
-    def spawn_player(self, game_map):
-        # place the player in the middle of the left edge of the map
-        self.curr_x = 0
-        self.curr_y = game_map.height // 2
 
     # Read only access to private attributes
     @property
@@ -58,4 +52,40 @@ class Player:
     @property
     def inventory(self):
         return list(self.__inventory)  # copy so callers can't edit it directly
+
+    def change_curr_strength(self, amount : int):
+        self.__curr_strength += amount
+
+    def change_curr_water(self, amount : int):
+        self.__curr_water += amount
+
+    def change_curr_food(self, amount : int):
+        self.__curr_food += amount
+
+    def change_curr_gold(self, amount : int):
+        self.__curr_gold += amount
+
+    def change_move_pts(self, amount : int):
+        self.__move_pts += amount
+
+    # class methods
+
+    def collect_item(self, item: Item):
+        self.__inventory.append(item)
+
+    def initiate_trade(self, item: Item):
+        return None
     
+    def accept_trade(self):
+        return None
+
+    def reject_trade(self):
+        return None
+
+    def get_curr_location(self):
+        return None
+
+
+    
+
+            
