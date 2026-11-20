@@ -103,13 +103,10 @@ class Player:
     def change_move_pts(self, amount : int):
         self.__move_pts += amount
 
-    # spawn method - places player on west edge of the map
-    def spawn_player(self, start_y: int):
-        self.update_position(0, start_y)
+    def set_max_stats(self):
         self.__curr_strength = self.__max_strength
         self.__curr_water = self.__max_water
         self.__curr_food = self.__max_food
-        self.__curr_gold = 0
 
     # changes player's position to new x, y and updates their vision scope
     def update_position(self, x: int, y: int):
@@ -117,6 +114,12 @@ class Player:
         self.curr_y = y
         if self.__vision_scope is not None:
             self.__vision_scope.update_position(x, y)
+
+    # spawn method - places player on west edge of the map
+    def spawn_player(self, start_y: int):
+        self.update_position(0, start_y)
+        self.set_max_stats()
+        self.__curr_gold = 0
 
     # class methods
 
