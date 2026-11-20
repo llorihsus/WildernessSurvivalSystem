@@ -113,7 +113,7 @@ class Player:
         self.curr_x = x
         self.curr_y = y
         if self.__vision_scope is not None:
-            self.__vision_scope.update_position(x, y)
+            self.__vision_scope.update_vision(x, y)
 
     # spawn method - places player on west edge of the map
     def spawn_player(self, start_y: int):
